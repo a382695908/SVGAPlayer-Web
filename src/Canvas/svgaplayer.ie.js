@@ -281,7 +281,6 @@
     }
 })(window);
 
-console.log("svgaplayer.ie.js init");
 
 if(typeof module != "undefined"){
     module.exports = window.SVGA;

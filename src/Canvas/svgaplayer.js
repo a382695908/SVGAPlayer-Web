@@ -8,5 +8,3 @@ module.exports = {
     autoload: AutoLoader.autoload,
 }
 AutoLoader.autoload();
-
-console.log("svgaplayer.js init");
