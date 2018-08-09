@@ -30,21 +30,20 @@
                     throw Error("You must provide a valid div ID >>> new Parser(xxx).")
                 }
                 if (containerElement.getElementsByTagName("object").length === 0) {
+                    var id = "id" + uuid;
                     try {
-                        var element = document.createElement("<object id='" + uuid + "' name='" + uuid + "' type='application/x-shockwave-flash' data='" + global.SVGA.SWFLocation + "' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' />");
+                        var element = document.createElement("<object id='" + id + "' name='" + id + "' type='application/x-shockwave-flash' data='" + global.SVGA.SWFLocation + "'/>");
 
                     } catch (error) {
                         var element = document.createElement("object");
-                        element.setAttribute("id", uuid);
-                        element.setAttribute("name", uuid);
-                        element.setAttribute("classid", 'clsid:D27CDB6E-AE6D-11cf-96B8-444553540000');
-
+                        element.setAttribute("id", id);
+                        element.setAttribute("name", id);
 
                         element.setAttribute("type", "application/x-shockwave-flash");
                         element.setAttribute("data", global.SVGA.SWFLocation);
                     }
                     global["SVGACB_" + uuid + "_onReady"] = function() {
-                        callback(document.getElementById(uuid));
+                        callback(document.getElementById(id));
                     };
 
 
@@ -122,11 +121,11 @@
                         }
 
                         var attributes = {};
-                        attributes.id = uuid;
-                        attributes.name = uuid;
+                        attributes.id = id;
+                        attributes.name = id;
                         attributes.align = "middle";
                         if (typeof swfobject != "undefined") {
-                            swfobject.embedSWF(url, uuid, width, height, swfVersionStr, xiSwfUrlStr, flashvars, params, attributes, function(result) {
+                            swfobject.embedSWF(url, id, width, height, swfVersionStr, xiSwfUrlStr, flashvars, params, attributes, function(result) {
                                 if (!result.success) {
                                     if (typeof console != "undefined") {
                                         console.log && console.log("svga flashplayer install failed");
