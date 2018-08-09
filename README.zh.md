@@ -185,3 +185,5 @@ SVGA.Parser 用于加载远端或 Base64 动画，并转换成 VideoItem。
 ```
 <script src="//cdn.bootcss.com/blob-polyfill/1.0.20150320/Blob.min.js"></script>
 ```
+
+window.SVGA.SWFLocation = "SVGAPlayerWeb.swf" //指定swf文件的加载路径，用来兼容低版本浏览器

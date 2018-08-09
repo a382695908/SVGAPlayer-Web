@@ -1,11 +1,12 @@
-import { Parser } from '../parser'
-import { Player } from './player'
-import { AutoLoader } from './autoLoader'
-
-module.exports = {
-    Parser,
-    Player,
-    autoload: AutoLoader.autoload,
+function isltIE10() {
+    //判断是否小于IE10 ，ie9支持canvas 但是不支持ajax加载二进制文件
+    return (navigator.appName == "Microsoft Internet Explorer"&&parseInt(navigator.appVersion.split(";")[1].replace(/[ ]/g, "").replace("MSIE",""))<10)
 }
 
-AutoLoader.autoload();
+if(!isltIE10()){
+    module.exports = require('./svgaplayer.js')
+
+}else{
+    module.exports = require('./svgaplayer.ie.js')
+}
+
