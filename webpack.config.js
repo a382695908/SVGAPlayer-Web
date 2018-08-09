@@ -30,14 +30,14 @@ module.exports = {
         ],
     },
     plugins: [
-        // new UglifyJsPlugin({
-        //
-        //         // warnings: true,
-        //         // drop_console: true
-        //
-        //         // include: /\.min\.js$/,
-        //         // minimize: true,
-        //         // output: { comments: false }
-        // })
+        new UglifyJsPlugin({
+
+                // warnings: true,
+                // drop_console: true
+
+                // include: /\.min\.js$/,
+                // minimize: true,
+                // output: { comments: false }
+        })
     ],
 }
