@@ -10,9 +10,19 @@ export class Renderer {
     _prepared = false;
     _undrawFrame = undefined;
     _bitmapCache = undefined;
+    _soundsQueue = [];
 
     constructor(owner) {
         this._owner = owner;
+    }
+
+    dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], { type: mime });
     }
 
     prepare() {
@@ -45,6 +55,31 @@ export class Renderer {
                     imgTag.src = 'data:image/png;base64,' + src;
                     this._bitmapCache[imageKey] = imgTag;
                 }
+                else if (src.indexOf("SUQzAw") === 0) {
+                    if (window.Howl !== undefined) {
+                        totalCount++;
+                        var sound = new Howl({
+                            src: [(navigator.vendor === "Google Inc." ? URL.createObjectURL(this.dataURLtoBlob('data:audio/x-mpeg;base64,' + src)) : 'data:audio/x-mpeg;base64,' + src)],
+                            html5: navigator.vendor === "Google Inc." ? true : undefined,
+                            preload: navigator.vendor === "Google Inc." ? true : undefined,
+                            format: navigator.vendor === "Google Inc." ? ["mp3"] : undefined,
+                        });
+                        sound.once("load", function () {
+                            loadedCount++;
+                            if (loadedCount == totalCount) {
+                                this._prepared = true;
+                                if (typeof this._undrawFrame === "number") {
+                                    this.drawFrame(this._undrawFrame);
+                                    this._undrawFrame = undefined;
+                                }
+                            }
+                        }.bind(this))
+                        sound.on("loaderror", function (e) {
+                            console.error(e)
+                        })
+                        this._bitmapCache[imageKey] = sound;
+                    }
+                }
             }
         }
     }
@@ -58,6 +93,13 @@ export class Renderer {
             height: (this._owner._drawingCanvas || this._owner._container).height,
         }
         ctx.clearRect(areaFrame.x, areaFrame.y, areaFrame.width, areaFrame.height)
+    }
+
+    clearAudios() {
+        this._soundsQueue.forEach(it => {
+            it.player.stop(it.playID)
+        })
+        this._soundsQueue = []
     }
 
     drawFrame(frame) {
@@ -155,6 +197,32 @@ export class Renderer {
         }
         else {
             this._undrawFrame = frame;
+        }
+    }
+
+    playAudio(frame) {
+        if (this._owner._forwardAnimating && this._owner._videoItem.audios instanceof Array) {
+            this._owner._videoItem.audios.forEach(audio => {
+                if (audio.startFrame === frame && this._bitmapCache[audio.audioKey] !== undefined && typeof this._bitmapCache[audio.audioKey].play === "function") {
+                    const item = {
+                        playID: this._bitmapCache[audio.audioKey].play(),
+                        player: this._bitmapCache[audio.audioKey],
+                        endFrame: audio.endFrame,
+                    }
+                    item.player.seek(audio.startTime / 1000, item.playID)
+                    this._soundsQueue.push(item)
+                }
+            })
+            let deleted = false
+            this._soundsQueue.forEach(it => {
+                if (frame >= it.endFrame) {
+                    deleted = true
+                    it.player.stop(it.playID)
+                }
+            })
+            if (deleted) {
+                this._soundsQueue = this._soundsQueue.filter(it => frame < it.endFrame)
+            }
         }
     }
 
@@ -373,8 +441,8 @@ export class Renderer {
         let height = obj._height;
         let radius = obj._cornerRadius;
 
-        if (width < 2 * radius) {radius = width / 2;}
-        if (height < 2 * radius){ radius = height / 2;}
+        if (width < 2 * radius) { radius = width / 2; }
+        if (height < 2 * radius) { radius = height / 2; }
 
         ctx.beginPath();
         ctx.moveTo(x + radius, y);
