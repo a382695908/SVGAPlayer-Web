@@ -2,6 +2,7 @@ var path = require('path');
 var webpack = require('webpack');
 
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+var es3ifyPlugin = require('es3ify-webpack-plugin');
 
 module.exports = {
     mode: "development",//development production
@@ -21,8 +22,13 @@ module.exports = {
         //loaders  rules
         rules: [
             {
+                test: /\.js?$/, 
+                loaders: ['es3ify-loader']
+            },
+            {
                 test: path.join(__dirname, 'src'),
                 loader: 'babel-loader',
+                //plugins:["transform-es3-property-literals","transform-es3-member-expression-literals"],
                 query: {
                     presets: ['es2015', "stage-0"]
                 }
@@ -30,14 +36,20 @@ module.exports = {
         ],
     },
     plugins: [
-        new UglifyJsPlugin({
+        
+        // new UglifyJsPlugin({
 
-                // warnings: true,
-                // drop_console: true
+        //         warnings: true,
+        //         screw_ie8: false,
+        //         drop_console: true,
 
-                // include: /\.min\.js$/,
-                // minimize: true,
-                // output: { comments: false }
-        })
+        //         include: /\.min\.js$/,
+        //         minimize: true,
+        //         mangle: {
+        //             screw_ie8: false
+        //         },
+        //         output: { comments: false,screw_ie8:false }
+        // }),
+        new es3ifyPlugin()
     ],
 }
