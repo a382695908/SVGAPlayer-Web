@@ -1,11 +1,13 @@
 import swfobjectObj from "swfobject"
 
 (function(global) {
-
+    var SVGA = null;
     var svagInitFun = function(global){
-        global.SVGA = {
+        //global.SVGA = SVGA;
+       SVGA = {
             isSupportSwf: true,
             SWFLocation: "SVGAPlayerWeb.swf",
+            _swfReadyCacheFunObj: {},
             createUUID: function() {
                 var s = [];
                 var hexDigits = "0123456789abcdef";
@@ -26,27 +28,38 @@ import swfobjectObj from "swfobject"
                 return "SVGACB_" + uuid + "_handler";
             },
             createSWFObject: function(container, callback) {
-                var uuid = global.SVGA.createUUID();
+                
                 var containerElement = typeof container === "object" ? container : document.getElementById(container.replace('#', ''));
                 if (containerElement === null || containerElement === undefined) {
                     throw Error("You must provide a valid div ID >>> new Parser(xxx).")
                 }
                 if (containerElement.getElementsByTagName("object").length === 0) {
+                    var uuid = global.SVGA.createUUID();
                     var id = "id" + uuid;
+                    var element = null;
                     try {
                         //var element = document.createElement("<object id='" + id + "' name='" + id + "' type='application/x-shockwave-flash' data='" + global.SVGA.SWFLocation + "'/>");
-                        var element = document.createElement("<object id='" + id + "' name='" + id + "'/>");
+                        element = document.createElement("<object id='" + id + "' name='" + id + "'/>");
 
                     } catch (error) {
-                        var element = document.createElement("object");
+                        element = document.createElement("object");
                         element.setAttribute("id", id);
                         element.setAttribute("name", id);
 
                         //element.setAttribute("type", "application/x-shockwave-flash");
                        // element.setAttribute("data", global.SVGA.SWFLocation);
                     }
+
+                    SVGA._swfReadyCacheFunObj[id] = [callback];
                     global["SVGACB_" + uuid + "_onReady"] = function() {
-                        callback(document.getElementById(id));
+                        var callList = SVGA._swfReadyCacheFunObj[id];
+                        if(callList){
+                            var swfDom = document.getElementById(id);
+                            while(callList.length){
+                                callList.shift()(swfDom);
+                            }
+                            //delete SVGA._swfReadyCacheFunObj[id];
+                        } 
                     };
 
 
@@ -183,7 +196,14 @@ import swfobjectObj from "swfobject"
                     //     swfObject.height = height;
                     //     swfObject.SVGAPlayer_Instance_setFrame(0, 0, swfObject.offsetWidth, swfObject.offsetHeight);
                     // }
-                    callback(swfObject);
+
+                    if(swfObject.SVGAParser_Instance_load){
+                        callback(swfObject);
+                    }else{
+                        SVGA._swfReadyCacheFunObj[swfObject.id].push(callback);
+                    }
+                    
+                   
                 }
             },
             Parser: function(container) {
@@ -200,7 +220,7 @@ import swfobjectObj from "swfobject"
                 };
             },
             Player: function(container) {
-                return {
+                var playerObj = {
                     setLoops: function(value) {
                         SVGA.createSWFObject(container, function(swfObject) {
                             swfObject.SVGAPlayer_Instance_setLoops(value);
@@ -292,13 +312,18 @@ import swfobjectObj from "swfobject"
                     },
                     startAnimation: function() {
                         SVGA.createSWFObject(container, function(swfObject) {
+                            (playerObj.loops || playerObj.loops === 0) && swfObject.SVGAPlayer_Instance_setLoops(playerObj.loops);
                             swfObject.SVGAPlayer_Instance_setFrame(0, 0, swfObject.offsetWidth, swfObject.offsetHeight);
                             swfObject.SVGAPlayer_Instance_startAnimation();
                         });
                     }
                 };
+
+                return playerObj;
+                
             }
         };
+        global.SVGA = SVGA;
     }
 
     if(typeof module != "undefined"){
